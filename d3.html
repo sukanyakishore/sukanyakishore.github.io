@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+ 
+<script src="https://d3js.org/d3.v4.js"></script>
+ 
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+ 
+<body>
+<div style="margin-left: auto; margin-right: auto; max-width: 55%; text-align: center;">
+  <h1 style="color: green; font-weight: bold; font-size: 40px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif">
+    Recycling Plastic Waste
+  </h1>
+  <p style="color: black; font-size: 15px; font-family: 'Courier New', Courier, monospace">
+    Despite their significant value, most end-of-life plastic products are currently incinerated. By understanding the properties of different types of plastic, we can recycle much more than we do today and create a circular economy for this valuable resource
+  </p>
+</div>
+<div style="text-align: center">
+  <img src="image 9.png">
+</div>
+ 
+<div style="margin-left: auto; margin-right: auto; max-width: 55%; text-align: center; margin-top: 5%;">
+  <h1 style="color: green; font-weight: bold; font-size: 40px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif">
+    Which sector produces the most amount of plastic waste?
+  </h1>
+  <p style="color: black; font-size: 15px; font-family: 'Courier New', Courier, monospace">
+    In 2018, packaging accounted for 46 percent of global plastic waste generation. This was considerably higher than any other sector, with textiles making up the second highest share with approximately 15 percent.
+Although very useful, plastic products, such as packaging, pose a number of environmental threats. Due to poor infrastructure and a lack of recycling options, products often end up in landfill sites, or oceans, causing significant environmental pollution.
+  </p>
+</div>
+ 
+<div style="text-align: center;" id="my_dataviz">
+ 
+</div>
+ 
+<style>
+.node:hover{
+  stroke-width: 7px !important;
+  opacity: 1 !important;
+}
+</style>
+ 
+<script>
+ 
+var width = 1000
+var height = 460
+ 
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+ 
+
+d3.csv("https://raw.githubusercontent.com/sukanyakishore/hereis/main/industries%20-%20Sheet1%20(1).csv", function(data) {
+ 
+
+  var color = d3.scaleOrdinal()
+    .domain(["Building and Construction", "Consumer & Institutional Products", "Electrical/Electronic", "HDPE", "Industrial Machinery", "LD and LDPE" , "Other polymer type", "PET" ,"PP", "PP&A fibers", "Packaging" , "Textiles", "Transportation"])
+    .range(d3.schemePaired);
+ 
+  var size = d3.scaleLinear()
+    .domain([0, 150])
+    .range([7,95])  
+ 
+
+  var Tooltip = d3.select("#my_dataviz")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "2px")
+    .style("border-radius", "5px")
+    .style("padding", "15px")
+ 
+  var mouseover = function(d) {
+    Tooltip
+      .style("opacity", 1)
+  }
+  var mousemove = function(d) {
+    Tooltip
+      .html('<u>' + "Sector: " + d.Name + '</u>' + "<br>" + d.Count + ",000,000 Tonnes of plastic waste /year")
+      .style("left", (d3.mouse(this)[0]+20) + "px")
+      .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+    Tooltip
+      .style("opacity", 0)
+  }
+
+  var node = svg.append("g")
+    .selectAll("circle")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("class", "node")
+      .attr("r", function(d){ return size(d.Count)})
+      .attr("cx", width / 2)
+      .attr("cy", height / 2)
+      .style("fill", function(d){ return color(d.Name)})
+      .style("fill-opacity", 0.8)
+      .attr("stroke", "black")
+      .style("stroke-width", 1)
+      .on("mouseover", mouseover) 
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
+      .call(d3.drag()
+           .on("start", dragstarted)
+           .on("drag", dragged)
+           .on("end", dragended));
+ 
+
+  var simulation = d3.forceSimulation()
+                .force("forceX", d3.forceX().strength(.1).x(width * .5))
+                .force("forceY", d3.forceY().strength(.1).y(height * .5))
+                .force("center", d3.forceCenter().x(width * .5).y(height * .5))
+                .force("charge", d3.forceManyBody().strength(-20))
+                .force("charge", d3.forceManyBody().strength(.1))
+                .force("collide", d3.forceCollide().strength(.2).radius(function(d){ return (size(d.Count)+3) }).iterations(1));
+                
+  simulation
+      .nodes(data)
+      .on("tick", function(d){
+        node
+            .attr("cx", function(d){ return d.x; })
+            .attr("cy", function(d){ return d.y; })
+      });
+
+
+  function dragstarted(d) {
+    if (!d3.event.active) simulation.alphaTarget(.03).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+  function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+  function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(.03);
+    d.fx = null;
+    d.fy = null;
+  }
+ 
+})
+ 
+</script>
+<div style="margin-left: auto; margin-right: auto; max-width: 70%; text-align: center; margin-top: 5%;">
+  <p style="color: black; font-size: 15px; font-family: 'Courier New', Courier, monospace">
+    At least 14 million tons of plastic end up in the ocean every year, and plastic makes up 80% of all marine debris found from surface waters to deep-sea sediments.
+    Marine species ingest or are entangled by plastic debris, which causes severe injuries and death.
+    Plastic pollution threatens food safety and quality, human health, coastal tourism, and contributes to climate change. 
+  </p>
+</div>
+
+</body>
